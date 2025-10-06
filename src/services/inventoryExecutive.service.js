@@ -36,7 +36,8 @@ exports.getInventoryExecutiveData = async (req, res) => {
         SUM(inv_age_0_to_30_days + inv_age_31_to_60_days + inv_age_61_to_90_days) as inv_age_0_to_90_days,
         SUM(inv_age_91_to_180_days + inv_age_181_to_270_days) as inv_age_91_to_270_days,
         AVG(instock_rate_percent) as instock_rate_percent,
-        SUM(CASE WHEN stock_status = 'Understock' AND dos_2 = 0 THEN 1 ELSE 0 END) as active_sku_out_of_stock_count
+        SUM(CASE WHEN stock_status = 'Understock' AND dos_2 = 0 THEN 1 ELSE 0 END) as active_sku_out_of_stock_count,
+        SUM(sale_lost) as sale_lost
       FROM std_inventory
       WHERE ${whereClause}
     `;

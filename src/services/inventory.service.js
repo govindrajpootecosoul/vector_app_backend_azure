@@ -329,7 +329,16 @@ exports.getInventoryStockStatusCounts = async (req, res) => {
     const activeSKUOutOfStockResult = await activeSKUOutOfStockRequest.query(activeSKUOutOfStockQuery);
     const activeSKUOutOfStockCount = activeSKUOutOfStockResult.recordset[0].count;
 
-    console.log('Stock status counts:', { overstockCount, understockCount, activeSKUOutOfStockCount });
+    // Get average instock rate percent
+    const instockRateQuery = `SELECT AVG(instock_rate_percent) as instock_rate_percent FROM std_inventory WHERE ${baseWhere}`;
+    const instockRateRequest = pool.request();
+    instockRateRequest.input('clientId', sql.VarChar, clientId);
+    if (platform) instockRateRequest.input('platform', sql.VarChar, `%${platform}%`);
+    if (country) instockRateRequest.input('country', sql.VarChar, `%${country}%`);
+    const instockRateResult = await instockRateRequest.query(instockRateQuery);
+    const instockRatePercent = instockRateResult.recordset[0].instock_rate_percent || 0;
+
+    console.log('Stock status counts:', { overstockCount, understockCount, activeSKUOutOfStockCount, instockRatePercent });
 
     res.json({
       success: true,
@@ -337,7 +346,8 @@ exports.getInventoryStockStatusCounts = async (req, res) => {
       data: {
         overstockCount,
         understockCount,
-        activeSKUOutOfStockCount
+        activeSKUOutOfStockCount,
+        instock_rate_percent: instockRatePercent
       }
     });
 
