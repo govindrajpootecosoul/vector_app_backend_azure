@@ -172,7 +172,11 @@ exports.getAdSalesAdSpendByDatabase = async (req, res) => {
     `;
 
     const currentResult = await pool.request().query(currentQuery);
-    const current = currentResult.recordset[0] || { totalAdSales: 0, totalAdSpend: 0, totalRevenue: 0 };
+    const current = currentResult.recordset[0] ? {
+      totalAdSales: currentResult.recordset[0].totalAdSales || 0,
+      totalAdSpend: currentResult.recordset[0].totalAdSpend || 0,
+      totalRevenue: currentResult.recordset[0].totalRevenue || 0
+    } : { totalAdSales: 0, totalAdSpend: 0, totalRevenue: 0 };
 
     // SQL query for previous period
     const previousMonthsList = previousMonths.map(m => `'${m}'`).join(',');
@@ -186,7 +190,11 @@ exports.getAdSalesAdSpendByDatabase = async (req, res) => {
     `;
 
     const previousResult = await pool.request().query(previousQuery);
-    const previous = previousResult.recordset[0] || { totalAdSales: 0, totalAdSpend: 0, totalRevenue: 0 };
+    const previous = previousResult.recordset[0] ? {
+      totalAdSales: previousResult.recordset[0].totalAdSales || 0,
+      totalAdSpend: previousResult.recordset[0].totalAdSpend || 0,
+      totalRevenue: previousResult.recordset[0].totalRevenue || 0
+    } : { totalAdSales: 0, totalAdSpend: 0, totalRevenue: 0 };
 
     // Calculate metrics
     const calculateMetrics = (data) => {
