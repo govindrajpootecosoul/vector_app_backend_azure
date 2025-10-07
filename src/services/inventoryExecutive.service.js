@@ -48,7 +48,7 @@ exports.getInventoryExecutiveData = async (req, res) => {
     // Calculate estimated_storage_cost_previous_month based on platform
     let estimated_storage_cost_previous_month = 0;
     if (data.platform === 'amazon') {
-      estimated_storage_cost_previous_month = 2506;
+      estimated_storage_cost_previous_month = 2440;
     } else if (data.platform === 'shopify') {
       estimated_storage_cost_previous_month = 3078;
     }
