@@ -329,8 +329,8 @@ exports.getInventoryStockStatusCounts = async (req, res) => {
     const activeSKUOutOfStockResult = await activeSKUOutOfStockRequest.query(activeSKUOutOfStockQuery);
     const activeSKUOutOfStockCount = activeSKUOutOfStockResult.recordset[0].count;
 
-    // Get average instock rate percent
-    const instockRateQuery = `SELECT AVG(instock_rate_percent) as instock_rate_percent FROM std_inventory WHERE ${baseWhere}`;
+    // Get average instock rate percent, excluding 0 values
+    const instockRateQuery = `SELECT AVG(instock_rate_percent) as instock_rate_percent FROM std_inventory WHERE ${baseWhere} AND instock_rate_percent IS NOT NULL AND instock_rate_percent != 0`;
     const instockRateRequest = pool.request();
     instockRateRequest.input('clientId', sql.VarChar, clientId);
     if (platform) instockRateRequest.input('platform', sql.VarChar, `%${platform}%`);

@@ -19,6 +19,13 @@
 ## Tasks
 - [x] Add support for fromDate and toDate parameters in adsalesadspend API to allow custom date ranges
 - [x] Update the service to handle fromDate/toDate by converting to month ranges for querying
+- [x] Add filterType=customrange to use fromDate/toDate
+
+## Inventory API Instock Rate Update
+
+## Tasks
+- [x] Update getInventoryStockStatusCounts to exclude instock_rate_percent = 0 from the average calculation
+- [x] Update getInventoryExecutiveData to exclude instock_rate_percent = 0 from the average calculation
 
 ## Deployment Guide
 
