@@ -6,6 +6,20 @@
 - [x] Modify the response structure to include both current and previous year data for comparison
 - [x] Test the API with filterType=previousmonth to verify year-over-year data is returned
 
+## Orders API Date Filter Fix
+
+## Tasks
+- [x] Update SQL queries in getOrdersByDatabase and getOrderListByDatabase to use sql.Date inputs for date parameters to avoid timezone conversion issues
+- [x] Exclude orders with status 'Cancelled' from calculations
+- [x] Update AOV calculation to be the average of per-date AOVs
+- [x] Test the API with filterType=previousmonth to verify only previous month's data is returned without extra days and AOV is correct
+
+## Ad Sales Ad Spend API Custom Range Support
+
+## Tasks
+- [x] Add support for fromDate and toDate parameters in adsalesadspend API to allow custom date ranges
+- [x] Update the service to handle fromDate/toDate by converting to month ranges for querying
+
 ## Deployment Guide
 
 ### Prerequisites

@@ -9,6 +9,8 @@ exports.getAdSalesAdSpendByDatabase = async (req, res) => {
       filterType,
       startMonth,
       endMonth,
+      fromDate,
+      toDate,
       sku
     } = req.query;
 
@@ -74,6 +76,19 @@ exports.getAdSalesAdSpendByDatabase = async (req, res) => {
         previousStartMonth = { year: prevYear, month: adjustedPrevMonth };
         previousEndMonth = { year: prevYear, month: adjustedPrevMonth };
       }
+    } else if (fromDate && toDate) {
+      // Direct date range: convert to month range
+      const startDate = new Date(fromDate);
+      const endDate = new Date(toDate);
+      currentStartMonth = { year: startDate.getUTCFullYear(), month: startDate.getUTCMonth() + 1 };
+      currentEndMonth = { year: endDate.getUTCFullYear(), month: endDate.getUTCMonth() + 1 };
+
+      // Calculate previous period with same duration
+      const durationMonths = (endDate.getUTCFullYear() - startDate.getUTCFullYear()) * 12 + (endDate.getUTCMonth() - startDate.getUTCMonth()) + 1;
+      const prevEndDate = new Date(startDate.getTime() - 86400000); // day before start
+      previousEndMonth = { year: prevEndDate.getUTCFullYear(), month: prevEndDate.getUTCMonth() + 1 };
+      const prevStartDate = new Date(prevEndDate.getTime() - (durationMonths - 1) * 30 * 24 * 60 * 60 * 1000); // approximate
+      previousStartMonth = { year: prevStartDate.getUTCFullYear(), month: prevStartDate.getUTCMonth() + 1 };
     } else {
     switch (filterType) {
       case "currentmonth": {
@@ -117,6 +132,32 @@ exports.getAdSalesAdSpendByDatabase = async (req, res) => {
         previousEndMonth = { year: currentYear - 2, month: 12 };
         break;
       }
+      case "customrange": {
+        if (!fromDate || !toDate) {
+          return res.status(400).json({
+            status: 400,
+            error: {
+              code: "BAD_REQUEST",
+              message: "fromDate and toDate are required for customrange",
+              details: "Provide fromDate and toDate in YYYY-MM-DD format."
+            },
+            timestamp: new Date().toISOString()
+          });
+        }
+        // Convert to month range
+        const startDate = new Date(fromDate);
+        const endDate = new Date(toDate);
+        currentStartMonth = { year: startDate.getUTCFullYear(), month: startDate.getUTCMonth() + 1 };
+        currentEndMonth = { year: endDate.getUTCFullYear(), month: endDate.getUTCMonth() + 1 };
+
+        // Calculate previous period with same duration
+        const durationMonths = (endDate.getUTCFullYear() - startDate.getUTCFullYear()) * 12 + (endDate.getUTCMonth() - startDate.getUTCMonth()) + 1;
+        const prevEndDate = new Date(startDate.getTime() - 86400000); // day before start
+        previousEndMonth = { year: prevEndDate.getUTCFullYear(), month: prevEndDate.getUTCMonth() + 1 };
+        const prevStartDate = new Date(prevEndDate.getTime() - (durationMonths - 1) * 30 * 24 * 60 * 60 * 1000); // approximate
+        previousStartMonth = { year: prevStartDate.getUTCFullYear(), month: prevStartDate.getUTCMonth() + 1 };
+        break;
+      }
       case "6months":
       default: {
         return res.status(400).json({
@@ -124,7 +165,7 @@ exports.getAdSalesAdSpendByDatabase = async (req, res) => {
           error: {
             code: "BAD_REQUEST",
             message: `Invalid filterType: ${filterType}`,
-            details: "Provide a valid filterType such as currentmonth, previousmonth, currentyear, or lastyear."
+            details: "Provide a valid filterType such as currentmonth, previousmonth, currentyear, lastyear, or customrange."
           },
           timestamp: new Date().toISOString()
         });
@@ -239,7 +280,17 @@ exports.getAdSalesAdSpendByDatabase = async (req, res) => {
       data: {
         current: currentMetrics,
         previous: previousMetrics,
-        percent
+        percent,
+        comparison: {
+          currentPeriod: {
+            startMonth: `${currentStartMonth.year}-${currentStartMonth.month.toString().padStart(2, '0')}`,
+            endMonth: `${currentEndMonth.year}-${currentEndMonth.month.toString().padStart(2, '0')}`
+          },
+          previousPeriod: {
+            startMonth: `${previousStartMonth.year}-${previousStartMonth.month.toString().padStart(2, '0')}`,
+            endMonth: `${previousEndMonth.year}-${previousEndMonth.month.toString().padStart(2, '0')}`
+          }
+        }
       }
     });
 

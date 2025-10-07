@@ -142,14 +142,14 @@ exports.getOrderListByDatabase = async (req, res) => {
         SUM(CAST(total_sales AS FLOAT)) as revenue,
         MAX(purchase_date) as latest_purchase_date
       FROM std_orders
-      WHERE ${whereClause} AND purchase_date >= @currentStartDate AND purchase_date <= @currentEndDate
+      WHERE ${whereClause} AND purchase_date >= @currentStartDate AND purchase_date <= @currentEndDate AND order_status != 'Cancelled'
       GROUP BY sku, product_name, product_category
       ORDER BY latest_purchase_date DESC
     `;
 
     const currentResult = await pool.request()
-      .input('currentStartDate', sql.DateTime, currentStartDate)
-      .input('currentEndDate', sql.DateTime, currentEndDate)
+      .input('currentStartDate', sql.Date, currentStartDate)
+      .input('currentEndDate', sql.Date, currentEndDate)
       .query(currentQuery);
 
     const skudata = currentResult.recordset;
@@ -340,19 +340,19 @@ exports.getOrdersByDatabase = async (req, res) => {
     // SQL query for current period orders
     const currentQuery = `
       SELECT
-        purchase_date,
+        CAST(purchase_date AS DATE) as purchase_date,
         SUM(CAST(quantity AS INT)) as totalQuantity,
         SUM(CAST(total_sales AS FLOAT)) as totalSales,
         COUNT(DISTINCT order_id) as orderCount
       FROM std_orders
-      WHERE ${whereClause} AND purchase_date >= @currentStartDate AND purchase_date <= @currentEndDate
-      GROUP BY purchase_date
-      ORDER BY purchase_date
+      WHERE ${whereClause} AND purchase_date >= @currentStartDate AND purchase_date <= @currentEndDate AND order_status != 'Cancelled'
+      GROUP BY CAST(purchase_date AS DATE)
+      ORDER BY CAST(purchase_date AS DATE)
     `;
 
     const currentResult = await pool.request()
-      .input('currentStartDate', sql.DateTime, currentStartDate)
-      .input('currentEndDate', sql.DateTime, currentEndDate)
+      .input('currentStartDate', sql.Date, currentStartDate)
+      .input('currentEndDate', sql.Date, currentEndDate)
       .query(currentQuery);
 
     let breakdown = {}, totalQuantity = 0, totalSales = 0, totalOrders = 0;
@@ -385,12 +385,12 @@ exports.getOrdersByDatabase = async (req, res) => {
         SUM(CAST(total_sales AS FLOAT)) as totalSales,
         COUNT(DISTINCT order_id) as orderCount
       FROM std_orders
-      WHERE ${whereClause} AND purchase_date >= @previousStartDate AND purchase_date <= @previousEndDate
+      WHERE ${whereClause} AND purchase_date >= @previousStartDate AND purchase_date <= @previousEndDate AND order_status != 'Cancelled'
     `;
 
     const previousResult = await pool.request()
-      .input('previousStartDate', sql.DateTime, previousStartDate)
-      .input('previousEndDate', sql.DateTime, previousEndDate)
+      .input('previousStartDate', sql.Date, previousStartDate)
+      .input('previousEndDate', sql.Date, previousEndDate)
       .query(previousQuery);
 
     const previous = previousResult.recordset[0] || { totalQuantity: 0, totalSales: 0, orderCount: 0 };
@@ -402,8 +402,13 @@ exports.getOrdersByDatabase = async (req, res) => {
       return (diff >= 0 ? diff.toFixed(2) + "% Gain" : diff.toFixed(2) + "% Loss");
     };
 
-    // Calculate AOV
-    const currentAOV = totalOrders > 0 ? totalSales / totalOrders : 0;
+    // Calculate AOV as average of per-date AOVs
+    let totalAovSum = 0;
+    let dateCount = Object.keys(breakdown).length;
+    Object.keys(breakdown).forEach(key => {
+      totalAovSum += breakdown[key].aov;
+    });
+    const currentAOV = dateCount > 0 ? totalAovSum / dateCount : 0;
     const previousAOV = previous.orderCount > 0 ? previous.totalSales / previous.orderCount : 0;
 
     res.json({
