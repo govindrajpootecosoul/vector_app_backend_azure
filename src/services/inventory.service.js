@@ -139,7 +139,7 @@ exports.getInventoryOverstockData = async (req, res) => {
     const clientId = req.user.client_id; // Get client_id from JWT token
 
     const pool = await getConnection();
-    let query = 'SELECT * FROM std_inventory WHERE client_id = @clientId AND stock_status = @stockStatus AND dos_2 >= @dos2 AND afn_fulfillable_quantity=@afn_fulfillable_quantity';
+    let query = 'SELECT * FROM std_inventory WHERE client_id = @clientId AND stock_status = @stockStatus AND dos_2 >= @dos2 AND afn_fulfillable_quantity>=@afn_fulfillable_quantity';
     const request = pool.request();
     request.input('clientId', sql.VarChar, clientId);
     request.input('stockStatus', sql.VarChar, 'Overstock');
