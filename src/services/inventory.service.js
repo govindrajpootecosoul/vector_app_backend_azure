@@ -139,11 +139,12 @@ exports.getInventoryOverstockData = async (req, res) => {
     const clientId = req.user.client_id; // Get client_id from JWT token
 
     const pool = await getConnection();
-    let query = 'SELECT * FROM std_inventory WHERE client_id = @clientId AND stock_status = @stockStatus AND dos_2 >= @dos2';
+    let query = 'SELECT * FROM std_inventory WHERE client_id = @clientId AND stock_status = @stockStatus AND dos_2 >= @dos2 AND afn_fulfillable_quantity=@afn_fulfillable_quantity';
     const request = pool.request();
     request.input('clientId', sql.VarChar, clientId);
     request.input('stockStatus', sql.VarChar, 'Overstock');
     request.input('dos2', sql.Int, 90);
+    request.input('afn_fulfillable_quantity', sql.Int, 90);
 
     // Add filters for platform and country if provided
     if (platform) {
@@ -178,11 +179,12 @@ exports.getInventoryUnderstockData = async (req, res) => {
     const clientId = req.user.client_id; // Get client_id from JWT token
 
     const pool = await getConnection();
-    let query = 'SELECT * FROM std_inventory WHERE client_id = @clientId AND stock_status = @stockStatus AND dos_2 <= @dos2';
+    let query = 'SELECT * FROM std_inventory WHERE client_id = @clientId AND stock_status = @stockStatus AND dos_2 <= @dos2 AND afn_fulfillable_quantity<=@afn_fulfillable_quantity ';
     const request = pool.request();
     request.input('clientId', sql.VarChar, clientId);
     request.input('stockStatus', sql.VarChar, 'Understock');
     request.input('dos2', sql.Int, 30);
+    request.input('afn_fulfillable_quantity', sql.Int, 30);
 
     // Add filters for platform and country if provided
     if (platform) {
@@ -217,11 +219,12 @@ exports.getInventoryActiveSKUOutOfStockData = async (req, res) => {
     const clientId = req.user.client_id; // Get client_id from JWT token
 
     const pool = await getConnection();
-    let query = 'SELECT * FROM std_inventory WHERE client_id = @clientId AND stock_status = @stockStatus AND dos_2 = @dos2';
+    let query = 'SELECT * FROM std_inventory WHERE client_id = @clientId AND stock_status = @stockStatus AND dos_2 = @dos2 AND afn_fulfillable_quantity=@afn_fulfillable_quantity';
     const request = pool.request();
     request.input('clientId', sql.VarChar, clientId);
     request.input('stockStatus', sql.VarChar, 'Understock');
     request.input('dos2', sql.Int, 0);
+    request.input('afn_fulfillable_quantity', sql.Int, 0);
 
     // Add filters for platform and country if provided
     if (platform) {
