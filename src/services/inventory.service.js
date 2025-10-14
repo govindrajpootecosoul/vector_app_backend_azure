@@ -306,7 +306,7 @@ exports.getInventoryStockStatusCounts = async (req, res) => {
     }
 
     // Count overstock: stock_status: "Overstock", dos_2: >= 90
-    const overstockQuery = `SELECT COUNT(*) as count FROM std_inventory WHERE ${baseWhere} AND stock_status = 'Overstock' AND dos_2 >= 90`;
+    const overstockQuery = `SELECT COUNT(*) as count FROM std_inventory WHERE ${baseWhere} AND stock_status = 'Overstock' AND dos_2 >= 90 AND afn_fulfillable_quantity >= 90`;
     const overstockRequest = pool.request();
     overstockRequest.input('clientId', sql.VarChar, clientId);
     if (platform) overstockRequest.input('platform', sql.VarChar, `%${platform}%`);
@@ -315,7 +315,7 @@ exports.getInventoryStockStatusCounts = async (req, res) => {
     const overstockCount = overstockResult.recordset[0].count;
 
     // Count understock: stock_status: "Understock", dos_2: <= 30
-    const understockQuery = `SELECT COUNT(*) as count FROM std_inventory WHERE ${baseWhere} AND stock_status = 'Understock' AND dos_2 <= 30`;
+    const understockQuery = `SELECT COUNT(*) as count FROM std_inventory WHERE ${baseWhere} AND stock_status = 'Understock' AND dos_2 <= 30 AND afn_fulfillable_quantity <= 30`;
     const understockRequest = pool.request();
     understockRequest.input('clientId', sql.VarChar, clientId);
     if (platform) understockRequest.input('platform', sql.VarChar, `%${platform}%`);
@@ -324,7 +324,7 @@ exports.getInventoryStockStatusCounts = async (req, res) => {
     const understockCount = understockResult.recordset[0].count;
 
     // Count active SKU out of stock: stock_status: "Understock", dos_2: 0
-    const activeSKUOutOfStockQuery = `SELECT COUNT(*) as count FROM std_inventory WHERE ${baseWhere} AND stock_status = 'Understock' AND dos_2 = 0`;
+    const activeSKUOutOfStockQuery = `SELECT COUNT(*) as count FROM std_inventory WHERE ${baseWhere} AND stock_status = 'Understock' AND dos_2 = 0 AND afn_fulfillable_quantity = 0`;
     const activeSKUOutOfStockRequest = pool.request();
     activeSKUOutOfStockRequest.input('clientId', sql.VarChar, clientId);
     if (platform) activeSKUOutOfStockRequest.input('platform', sql.VarChar, `%${platform}%`);
